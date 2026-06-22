@@ -6,3 +6,9 @@
 h1 {
     font-family: 'wp-heading', serif;
 }
+
+/* Dark base so every route (home, login, admin) sits on the same background */
+html, body {
+    margin: 0;
+    background: #0c0d10;
+}

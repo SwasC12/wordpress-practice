@@ -1,0 +1,25 @@
+<div class="auth-wrap">
+  <form class="auth-card" (ngSubmit)="onSubmit()">
+    <a class="logo" routerLink="/">Gearheads</a>
+    <h1 class="auth-title">Admin sign in</h1>
+    <p class="auth-sub">Sign in to manage posts.</p>
+
+    <label>
+      <span>Email</span>
+      <input type="email" [(ngModel)]="email" name="email" autocomplete="username" />
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input type="password" [(ngModel)]="password" name="password" autocomplete="current-password" />
+    </label>
+
+    <p class="auth-error" *ngIf="error">{{ error }}</p>
+
+    <button class="btn btn-primary btn-block" type="submit" [disabled]="busy">
+      {{ busy ? 'Signing in…' : 'Sign in' }}
+    </button>
+
+    <a class="back-link" routerLink="/">← Back to site</a>
+  </form>
+</div>

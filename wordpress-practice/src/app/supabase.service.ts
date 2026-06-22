@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 
-// ── Shapes used by the homepage template ──
+// ── Shapes used by the public homepage ──
 export interface Post {
   title: string;
   excerpt: string;
@@ -20,6 +20,23 @@ export interface CarEvent {
   blurb: string;
 }
 
+// ── Shapes used by the admin ──
+export interface PostRecord {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string | null;
+  gradient: string | null;
+  read_time: string | null;
+  category_id: string | null;
+  author_id: string | null;
+  published: boolean;
+  created_at: string;
+}
+
+export interface NamedRow { id: string; name: string; }
+
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   private client: SupabaseClient;
@@ -28,7 +45,8 @@ export class SupabaseService {
     this.client = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
-  /** Latest published posts, with their category + author joined in. */
+  // ─────────────── Public reads ───────────────
+
   async getPosts(): Promise<Post[]> {
     const { data, error } = await this.client
       .from('posts')
@@ -52,7 +70,6 @@ export class SupabaseService {
     }));
   }
 
-  /** Published events, soonest first by insertion order. */
   async getEvents(): Promise<CarEvent[]> {
     const { data, error } = await this.client
       .from('events')
@@ -73,15 +90,74 @@ export class SupabaseService {
     }));
   }
 
-  /** Newsletter signup. */
   async subscribe(email: string): Promise<{ ok: boolean; message: string }> {
     const { error } = await this.client.from('subscribers').insert({ email });
     if (error) {
-      // 23505 = unique violation (already subscribed)
       if (error.code === '23505') return { ok: true, message: "You're already subscribed!" };
       return { ok: false, message: error.message };
     }
     return { ok: true, message: 'Thanks for subscribing!' };
+  }
+
+  // ─────────────── Auth ───────────────
+
+  async signIn(email: string, password: string): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Signed in' };
+  }
+
+  async signOut(): Promise<void> {
+    await this.client.auth.signOut();
+  }
+
+  /** Returns the signed-in user's email, or null if not authenticated. */
+  async currentUserEmail(): Promise<string | null> {
+    const { data } = await this.client.auth.getSession();
+    return data.session?.user?.email ?? null;
+  }
+
+  // ─────────────── Admin: posts CRUD ───────────────
+
+  /** All posts (incl. unpublished) — requires an authenticated session (RLS). */
+  async getAllPosts(): Promise<PostRecord[]> {
+    const { data, error } = await this.client
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('getAllPosts failed:', error.message);
+      return [];
+    }
+    return (data ?? []) as PostRecord[];
+  }
+
+  async createPost(post: Partial<PostRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('posts').insert(post);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Post created' };
+  }
+
+  async updatePost(id: string, post: Partial<PostRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('posts').update(post).eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Post updated' };
+  }
+
+  async deletePost(id: string): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('posts').delete().eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Post deleted' };
+  }
+
+  async getCategories(): Promise<NamedRow[]> {
+    const { data } = await this.client.from('categories').select('id, name').order('name');
+    return (data ?? []) as NamedRow[];
+  }
+
+  async getAuthors(): Promise<NamedRow[]> {
+    const { data } = await this.client.from('authors').select('id, name').order('name');
+    return (data ?? []) as NamedRow[];
   }
 
   private formatDate(iso: string): string {

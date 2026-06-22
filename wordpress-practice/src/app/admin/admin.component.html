@@ -1,0 +1,114 @@
+<header class="admin-header">
+  <div class="bar">
+    <a class="logo" routerLink="/">Gearheads <span>admin</span></a>
+    <div class="bar-right">
+      <span class="user" *ngIf="userEmail">{{ userEmail }}</span>
+      <a class="ghost" routerLink="/">View site</a>
+      <button class="ghost" (click)="signOut()">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="admin-main">
+  <!-- ===== Editor ===== -->
+  <section class="panel editor">
+    <h2>{{ editingId ? 'Edit post' : 'New post' }}</h2>
+
+    <label>
+      <span>Title</span>
+      <input [(ngModel)]="form.title" (ngModelChange)="onTitleChange()" placeholder="Driving the new Aurora GT" />
+    </label>
+
+    <label>
+      <span>Slug</span>
+      <input [(ngModel)]="form.slug" placeholder="driving-the-new-aurora-gt" />
+    </label>
+
+    <label>
+      <span>Excerpt</span>
+      <textarea rows="2" [(ngModel)]="form.excerpt" placeholder="One or two line summary shown on the card."></textarea>
+    </label>
+
+    <label>
+      <span>Body</span>
+      <textarea rows="6" [(ngModel)]="form.body" placeholder="Full article text…"></textarea>
+    </label>
+
+    <div class="row">
+      <label>
+        <span>Category</span>
+        <select [(ngModel)]="form.category_id">
+          <option value="">— none —</option>
+          <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Author</span>
+        <select [(ngModel)]="form.author_id">
+          <option value="">— none —</option>
+          <option *ngFor="let a of authors" [value]="a.id">{{ a.name }}</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="row">
+      <label>
+        <span>Read time</span>
+        <input [(ngModel)]="form.read_time" placeholder="5 min read" />
+      </label>
+
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="form.published" />
+        <span>Published (visible on site)</span>
+      </label>
+    </div>
+
+    <label>
+      <span>Cover gradient</span>
+      <div class="swatches">
+        <button type="button" class="swatch" *ngFor="let g of gradients"
+                [style.background]="g"
+                [class.active]="form.gradient === g"
+                (click)="form.gradient = g"></button>
+      </div>
+    </label>
+
+    <p class="message" *ngIf="message">{{ message }}</p>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving">
+        {{ saving ? 'Saving…' : (editingId ? 'Update post' : 'Create post') }}
+      </button>
+      <button class="btn btn-outline" *ngIf="editingId" (click)="startNew()">Cancel</button>
+    </div>
+  </section>
+
+  <!-- ===== Post list ===== -->
+  <section class="panel list">
+    <div class="list-head">
+      <h2>Posts</h2>
+      <button class="btn btn-outline" (click)="startNew()">+ New</button>
+    </div>
+
+    <p class="muted" *ngIf="loading">Loading…</p>
+    <p class="muted" *ngIf="!loading && posts.length === 0">No posts yet. Create your first one.</p>
+
+    <ul class="post-rows">
+      <li class="post-row" *ngFor="let p of posts" [class.editing]="editingId === p.id">
+        <span class="swatch sm" [style.background]="p.gradient || ''"></span>
+        <div class="post-meta">
+          <span class="post-title">{{ p.title }}</span>
+          <span class="post-slug">/{{ p.slug }}</span>
+        </div>
+        <span class="badge" [class.draft]="!p.published">
+          {{ p.published ? 'Published' : 'Draft' }}
+        </span>
+        <div class="row-actions">
+          <button class="ghost" (click)="editPost(p)">Edit</button>
+          <button class="ghost danger" (click)="remove(p)">Delete</button>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
