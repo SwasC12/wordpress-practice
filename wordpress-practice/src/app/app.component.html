@@ -1,0 +1,149 @@
+<!-- ===== Header / Nav ===== -->
+<header class="site-header">
+  <div class="container nav">
+    <a class="logo" href="#">{{ brand }}</a>
+    <nav class="nav-links">
+      <a *ngFor="let link of navLinks" href="#">{{ link }}</a>
+    </nav>
+    <button class="btn btn-ghost">Subscribe</button>
+  </div>
+</header>
+
+<!-- ===== Hero / site title ===== -->
+<section class="hero">
+  <div class="container hero-inner">
+    <span class="eyebrow">The car culture blog</span>
+    <!-- h1 left exactly as it is -->
+    <h1>Gearheads Automotive</h1>
+    <p class="hero-sub">
+      Reviews, news and stories from the world of cars — plus the meets
+      and track days worth clearing your weekend for.
+    </p>
+    <div class="topic-chips">
+      <a class="chip" *ngFor="let t of topics" href="#">{{ t }}</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Featured story ===== -->
+<section class="section" *ngIf="featured as f">
+  <div class="container">
+    <article class="featured" [style.background]="f.gradient">
+      <div class="featured-overlay"></div>
+      <div class="featured-content">
+        <span class="tag">{{ f.category }}</span>
+        <h2 class="featured-title">{{ f.title }}</h2>
+        <p class="featured-excerpt">{{ f.excerpt }}</p>
+        <div class="meta">
+          <span>{{ f.author }}</span>
+          <span class="dot">•</span>
+          <span>{{ f.date }}</span>
+          <span class="dot">•</span>
+          <span>{{ f.readTime }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Loading / empty states -->
+<section class="section" *ngIf="loading">
+  <div class="container"><p class="state-msg">Loading stories…</p></div>
+</section>
+<section class="section" *ngIf="!loading && !featured">
+  <div class="container"><p class="state-msg">No posts yet — add some in the admin.</p></div>
+</section>
+
+<!-- ===== Latest posts ===== -->
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Latest stories</h2>
+      <a class="link" href="#">View all →</a>
+    </div>
+    <div class="post-grid">
+      <article class="post-card" *ngFor="let post of posts">
+        <div class="post-image" [style.background]="post.gradient">
+          <span class="tag">{{ post.category }}</span>
+        </div>
+        <div class="post-body">
+          <h3 class="post-title">{{ post.title }}</h3>
+          <p class="post-excerpt">{{ post.excerpt }}</p>
+          <div class="meta">
+            <span>{{ post.author }}</span>
+            <span class="dot">•</span>
+            <span>{{ post.date }}</span>
+            <span class="dot">•</span>
+            <span>{{ post.readTime }}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Upcoming events ===== -->
+<section class="section section-muted">
+  <div class="container">
+    <div class="section-head">
+      <h2>Upcoming events</h2>
+      <a class="link" href="#">Full calendar →</a>
+    </div>
+    <div class="event-list">
+      <article class="event-card" *ngFor="let e of events">
+        <div class="event-date">{{ e.date }}</div>
+        <div class="event-info">
+          <h3 class="event-name">{{ e.name }}</h3>
+          <p class="event-blurb">{{ e.blurb }}</p>
+          <span class="event-location">📍 {{ e.location }}</span>
+        </div>
+        <button class="btn btn-outline">Details</button>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Newsletter ===== -->
+<section class="cta">
+  <div class="container cta-inner">
+    <h2>Never miss a story</h2>
+    <p>Get our best reviews, news and event picks in your inbox every week.</p>
+    <div class="search-bar">
+      <input type="email" placeholder="you@example.com" [(ngModel)]="email" />
+      <button class="btn btn-primary" (click)="onSubscribe()">Subscribe</button>
+    </div>
+    <p class="subscribe-msg" *ngIf="subscribeMsg">{{ subscribeMsg }}</p>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <span class="logo">{{ brand }}</span>
+      <p class="footer-note">Stories, reviews and events for people who love cars.</p>
+    </div>
+    <div>
+      <h4>Read</h4>
+      <a href="#">Reviews</a>
+      <a href="#">News</a>
+      <a href="#">Guides</a>
+    </div>
+    <div>
+      <h4>Community</h4>
+      <a href="#">Events</a>
+      <a href="#">Forum</a>
+      <a href="#">Contact</a>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <span>© 2026 {{ brand }}. All rights reserved.</span>
+  </div>
+</footer>
+
+<router-outlet></router-outlet>

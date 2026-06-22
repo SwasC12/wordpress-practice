@@ -1,0 +1,8 @@
+@font-face {
+    font-family: 'wp-heading';
+    src: url('./assets/fonts/Brother\ Signature.otf') format('opentype');
+}
+
+h1 {
+    font-family: 'wp-heading', serif;
+}
