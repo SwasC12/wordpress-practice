@@ -28,7 +28,7 @@
 <!-- ===== Featured story ===== -->
 <section class="section" *ngIf="featured as f">
   <div class="container">
-    <article class="featured" [style.background]="f.coverUrl ? null : f.gradient">
+    <article class="featured clickable" [routerLink]="['/post', f.slug]" [style.background]="f.coverUrl ? null : f.gradient">
       <img *ngIf="f.coverUrl && !f.coverIsVideo" class="cover-media" [src]="f.coverUrl" alt="" />
       <video *ngIf="f.coverUrl && f.coverIsVideo" class="cover-media" [src]="f.coverUrl"
              autoplay muted loop playsinline></video>
@@ -65,7 +65,7 @@
       <a class="link" href="#">View all →</a>
     </div>
     <div class="post-grid">
-      <article class="post-card" *ngFor="let post of posts">
+      <article class="post-card clickable" *ngFor="let post of posts" [routerLink]="['/post', post.slug]">
         <div class="post-image" [style.background]="post.coverUrl ? null : post.gradient">
           <img *ngIf="post.coverUrl && !post.coverIsVideo" class="cover-media" [src]="post.coverUrl" alt="" />
           <video *ngIf="post.coverUrl && post.coverIsVideo" class="cover-media" [src]="post.coverUrl"

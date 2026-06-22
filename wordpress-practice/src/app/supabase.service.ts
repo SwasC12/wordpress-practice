@@ -5,6 +5,7 @@ import { CloudinaryService } from './cloudinary.service';
 
 // ── Shapes used by the public homepage ──
 export interface Post {
+  slug: string;
   title: string;
   excerpt: string;
   author: string;
@@ -14,6 +15,11 @@ export interface Post {
   gradient: string;
   coverUrl: string | null;   // Cloudinary image/video URL, if any
   coverIsVideo: boolean;
+}
+
+// Full article (includes the body) for the post-detail page
+export interface FullPost extends Post {
+  body: string;
 }
 
 export interface CarEvent {
@@ -54,7 +60,7 @@ export class SupabaseService {
   async getPosts(): Promise<Post[]> {
     const { data, error } = await this.client
       .from('posts')
-      .select('title, excerpt, read_time, gradient, cover_url, created_at, categories(name), authors(name)')
+      .select('slug, title, excerpt, read_time, gradient, cover_url, created_at, categories(name), authors(name)')
       .eq('published', true)
       .order('created_at', { ascending: false });
 
@@ -63,7 +69,30 @@ export class SupabaseService {
       return [];
     }
 
-    return (data ?? []).map((row: any) => ({
+    return (data ?? []).map((row: any) => this.mapPost(row));
+  }
+
+  /** A single published article by slug, including its body. Null if not found. */
+  async getPostBySlug(slug: string): Promise<FullPost | null> {
+    const { data, error } = await this.client
+      .from('posts')
+      .select('slug, title, excerpt, body, read_time, gradient, cover_url, created_at, categories(name), authors(name)')
+      .eq('slug', slug)
+      .eq('published', true)
+      .maybeSingle();
+
+    if (error) {
+      console.error('getPostBySlug failed:', error.message);
+      return null;
+    }
+    if (!data) return null;
+
+    return { ...this.mapPost(data), body: (data as any).body ?? '' };
+  }
+
+  private mapPost(row: any): Post {
+    return {
+      slug: row.slug,
       title: row.title,
       excerpt: row.excerpt ?? '',
       author: row.authors?.name ?? 'Staff',
@@ -73,7 +102,7 @@ export class SupabaseService {
       gradient: row.gradient ?? 'linear-gradient(135deg, #1e3a8a, #0ea5e9)',
       coverUrl: row.cover_url ?? null,
       coverIsVideo: CloudinaryService.isVideo(row.cover_url)
-    }));
+    };
   }
 
   async getEvents(): Promise<CarEvent[]> {

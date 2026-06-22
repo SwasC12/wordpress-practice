@@ -1,0 +1,51 @@
+<header class="site-header">
+  <div class="container nav">
+    <a class="logo" routerLink="/">Gearheads</a>
+    <a class="back" routerLink="/">← All stories</a>
+  </div>
+</header>
+
+<!-- Loading -->
+<div class="container" *ngIf="loading">
+  <p class="state-msg">Loading article…</p>
+</div>
+
+<!-- Not found -->
+<div class="container" *ngIf="!loading && !post">
+  <div class="notfound">
+    <h1>Story not found</h1>
+    <p>This article may have been removed or unpublished.</p>
+    <a class="btn btn-primary" routerLink="/">Back to all stories</a>
+  </div>
+</div>
+
+<!-- Article -->
+<article *ngIf="!loading && post as p">
+  <!-- Cover -->
+  <div class="cover" [style.background]="p.coverUrl ? null : p.gradient">
+    <img *ngIf="p.coverUrl && !p.coverIsVideo" class="cover-media" [src]="p.coverUrl" alt="" />
+    <video *ngIf="p.coverUrl && p.coverIsVideo" class="cover-media" [src]="p.coverUrl"
+           autoplay muted loop playsinline></video>
+    <div class="cover-overlay"></div>
+    <div class="container cover-content">
+      <span class="tag">{{ p.category }}</span>
+      <h1 class="article-title">{{ p.title }}</h1>
+      <div class="meta">
+        <span>{{ p.author }}</span>
+        <span class="dot">•</span>
+        <span>{{ p.date }}</span>
+        <span class="dot">•</span>
+        <span>{{ p.readTime }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="container body">
+    <p class="lead" *ngIf="p.excerpt">{{ p.excerpt }}</p>
+    <p *ngFor="let para of paragraphs">{{ para }}</p>
+    <p class="empty" *ngIf="paragraphs.length === 0">No content for this article yet.</p>
+
+    <a class="btn btn-outline back-btn" routerLink="/">← Back to all stories</a>
+  </div>
+</article>

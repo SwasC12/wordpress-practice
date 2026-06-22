@@ -206,6 +206,7 @@
   transition: transform .15s ease, border-color .2s ease;
 }
 .post-card:hover { transform: translateY(-4px); border-color: #333a45; }
+.clickable { cursor: pointer; }
 .post-image {
   position: relative;
   height: 180px;
