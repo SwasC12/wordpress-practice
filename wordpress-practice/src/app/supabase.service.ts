@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
+import { CloudinaryService } from './cloudinary.service';
 
 // ── Shapes used by the public homepage ──
 export interface Post {
@@ -11,6 +12,8 @@ export interface Post {
   category: string;
   readTime: string;
   gradient: string;
+  coverUrl: string | null;   // Cloudinary image/video URL, if any
+  coverIsVideo: boolean;
 }
 
 export interface CarEvent {
@@ -28,6 +31,7 @@ export interface PostRecord {
   excerpt: string | null;
   body: string | null;
   gradient: string | null;
+  cover_url: string | null;
   read_time: string | null;
   category_id: string | null;
   author_id: string | null;
@@ -50,7 +54,7 @@ export class SupabaseService {
   async getPosts(): Promise<Post[]> {
     const { data, error } = await this.client
       .from('posts')
-      .select('title, excerpt, read_time, gradient, created_at, categories(name), authors(name)')
+      .select('title, excerpt, read_time, gradient, cover_url, created_at, categories(name), authors(name)')
       .eq('published', true)
       .order('created_at', { ascending: false });
 
@@ -66,7 +70,9 @@ export class SupabaseService {
       date: this.formatDate(row.created_at),
       category: row.categories?.name ?? 'General',
       readTime: row.read_time ?? '',
-      gradient: row.gradient ?? 'linear-gradient(135deg, #1e3a8a, #0ea5e9)'
+      gradient: row.gradient ?? 'linear-gradient(135deg, #1e3a8a, #0ea5e9)',
+      coverUrl: row.cover_url ?? null,
+      coverIsVideo: CloudinaryService.isVideo(row.cover_url)
     }));
   }
 

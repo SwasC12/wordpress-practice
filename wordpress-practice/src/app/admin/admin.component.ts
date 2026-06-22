@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, PostRecord, NamedRow } from '../supabase.service';
+import { CloudinaryService } from '../cloudinary.service';
 
 type PostForm = {
   title: string;
@@ -10,6 +11,7 @@ type PostForm = {
   excerpt: string;
   body: string;
   gradient: string;
+  cover_url: string;
   read_time: string;
   category_id: string;
   author_id: string;
@@ -41,12 +43,39 @@ export class AdminComponent implements OnInit {
 
   loading = true;
   saving = false;
+  uploading = false;
   message = '';
   editingId: string | null = null;
 
   form: PostForm = this.blankForm();
 
-  constructor(private supabase: SupabaseService, private router: Router) {}
+  constructor(
+    private supabase: SupabaseService,
+    private cloudinary: CloudinaryService,
+    private router: Router
+  ) {}
+
+  coverIsVideo(url: string): boolean {
+    return CloudinaryService.isVideo(url);
+  }
+
+  async onFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.message = '';
+    this.uploading = true;
+    try {
+      const result = await this.cloudinary.upload(file);
+      this.form.cover_url = result.url;
+    } catch (err: any) {
+      this.message = err?.message ?? 'Upload failed.';
+    } finally {
+      this.uploading = false;
+      input.value = ''; // allow re-selecting the same file
+    }
+  }
 
   async ngOnInit(): Promise<void> {
     this.userEmail = (await this.supabase.currentUserEmail()) ?? '';
@@ -65,7 +94,7 @@ export class AdminComponent implements OnInit {
   blankForm(): PostForm {
     return {
       title: '', slug: '', excerpt: '', body: '',
-      gradient: GRADIENT_PRESETS[0], read_time: '',
+      gradient: GRADIENT_PRESETS[0], cover_url: '', read_time: '',
       category_id: '', author_id: '', published: true
     };
   }
@@ -94,6 +123,7 @@ export class AdminComponent implements OnInit {
       excerpt: p.excerpt ?? '',
       body: p.body ?? '',
       gradient: p.gradient ?? GRADIENT_PRESETS[0],
+      cover_url: p.cover_url ?? '',
       read_time: p.read_time ?? '',
       category_id: p.category_id ?? '',
       author_id: p.author_id ?? '',
@@ -114,6 +144,7 @@ export class AdminComponent implements OnInit {
       excerpt: this.form.excerpt.trim() || null,
       body: this.form.body.trim() || null,
       gradient: this.form.gradient || null,
+      cover_url: this.form.cover_url || null,
       read_time: this.form.read_time.trim() || null,
       category_id: this.form.category_id || null,
       author_id: this.form.author_id || null,

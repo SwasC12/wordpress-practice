@@ -65,7 +65,19 @@
     </div>
 
     <label>
-      <span>Cover gradient</span>
+      <span>Cover image / video</span>
+      <input type="file" accept="image/*,video/*" (change)="onFile($event)" [disabled]="uploading" />
+    </label>
+    <p class="muted" *ngIf="uploading">Uploading to Cloudinary…</p>
+
+    <div class="cover-preview" *ngIf="form.cover_url">
+      <img *ngIf="!coverIsVideo(form.cover_url)" [src]="form.cover_url" alt="cover preview" />
+      <video *ngIf="coverIsVideo(form.cover_url)" [src]="form.cover_url" autoplay muted loop playsinline></video>
+      <button type="button" class="ghost danger" (click)="form.cover_url = ''">Remove cover</button>
+    </div>
+
+    <label *ngIf="!form.cover_url">
+      <span>Cover gradient (used when no image is uploaded)</span>
       <div class="swatches">
         <button type="button" class="swatch" *ngFor="let g of gradients"
                 [style.background]="g"
@@ -96,7 +108,10 @@
 
     <ul class="post-rows">
       <li class="post-row" *ngFor="let p of posts" [class.editing]="editingId === p.id">
-        <span class="swatch sm" [style.background]="p.gradient || ''"></span>
+        <span class="swatch sm" [style.background]="p.cover_url ? null : (p.gradient || '')">
+          <img *ngIf="p.cover_url && !coverIsVideo(p.cover_url)" [src]="p.cover_url" alt="" />
+          <video *ngIf="p.cover_url && coverIsVideo(p.cover_url)" [src]="p.cover_url" muted></video>
+        </span>
         <div class="post-meta">
           <span class="post-title">{{ p.title }}</span>
           <span class="post-slug">/{{ p.slug }}</span>

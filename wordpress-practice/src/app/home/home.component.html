@@ -28,7 +28,10 @@
 <!-- ===== Featured story ===== -->
 <section class="section" *ngIf="featured as f">
   <div class="container">
-    <article class="featured" [style.background]="f.gradient">
+    <article class="featured" [style.background]="f.coverUrl ? null : f.gradient">
+      <img *ngIf="f.coverUrl && !f.coverIsVideo" class="cover-media" [src]="f.coverUrl" alt="" />
+      <video *ngIf="f.coverUrl && f.coverIsVideo" class="cover-media" [src]="f.coverUrl"
+             autoplay muted loop playsinline></video>
       <div class="featured-overlay"></div>
       <div class="featured-content">
         <span class="tag">{{ f.category }}</span>
@@ -63,7 +66,10 @@
     </div>
     <div class="post-grid">
       <article class="post-card" *ngFor="let post of posts">
-        <div class="post-image" [style.background]="post.gradient">
+        <div class="post-image" [style.background]="post.coverUrl ? null : post.gradient">
+          <img *ngIf="post.coverUrl && !post.coverIsVideo" class="cover-media" [src]="post.coverUrl" alt="" />
+          <video *ngIf="post.coverUrl && post.coverIsVideo" class="cover-media" [src]="post.coverUrl"
+                 autoplay muted loop playsinline></video>
           <span class="tag">{{ post.category }}</span>
         </div>
         <div class="post-body">
