@@ -47,6 +47,17 @@ export interface PostRecord {
 
 export interface NamedRow { id: string; name: string; }
 
+export interface EventRecord {
+  id: string;
+  name: string;
+  event_date: string;
+  location: string | null;
+  blurb: string | null;
+  body: string | null;
+  published: boolean;
+  created_at: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   private client: SupabaseClient;
@@ -183,6 +194,39 @@ export class SupabaseService {
     const { error } = await this.client.from('posts').delete().eq('id', id);
     if (error) return { ok: false, message: error.message };
     return { ok: true, message: 'Post deleted' };
+  }
+
+  // ─────────────── Admin: events CRUD ───────────────
+
+  /** All events (incl. unpublished) — requires an authenticated session (RLS). */
+  async getAllEvents(): Promise<EventRecord[]> {
+    const { data, error } = await this.client
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('getAllEvents failed:', error.message);
+      return [];
+    }
+    return (data ?? []) as EventRecord[];
+  }
+
+  async createEvent(ev: Partial<EventRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('events').insert(ev);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Event created' };
+  }
+
+  async updateEvent(id: string, ev: Partial<EventRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('events').update(ev).eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Event updated' };
+  }
+
+  async deleteEvent(id: string): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('events').delete().eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Event deleted' };
   }
 
   async getCategories(): Promise<NamedRow[]> {

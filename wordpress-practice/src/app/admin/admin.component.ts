@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService, PostRecord, NamedRow } from '../supabase.service';
+import { SupabaseService, PostRecord, EventRecord, NamedRow } from '../supabase.service';
 import { CloudinaryService } from '../cloudinary.service';
 
 type PostForm = {
@@ -15,6 +15,15 @@ type PostForm = {
   read_time: string;
   category_id: string;
   author_id: string;
+  published: boolean;
+};
+
+type EventForm = {
+  name: string;
+  event_date: string;
+  location: string;
+  blurb: string;
+  body: string;
   published: boolean;
 };
 
@@ -41,6 +50,8 @@ export class AdminComponent implements OnInit {
   authors: NamedRow[] = [];
   gradients = GRADIENT_PRESETS;
 
+  activeTab: 'posts' | 'events' = 'posts';
+
   loading = true;
   saving = false;
   uploading = false;
@@ -48,6 +59,13 @@ export class AdminComponent implements OnInit {
   editingId: string | null = null;
 
   form: PostForm = this.blankForm();
+
+  // Events
+  events: EventRecord[] = [];
+  eventForm: EventForm = this.blankEventForm();
+  editingEventId: string | null = null;
+  savingEvent = false;
+  eventMessage = '';
 
   constructor(
     private supabase: SupabaseService,
@@ -79,7 +97,7 @@ export class AdminComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.userEmail = (await this.supabase.currentUserEmail()) ?? '';
-    await this.refresh();
+    await Promise.all([this.refresh(), this.refreshEvents()]);
     [this.categories, this.authors] = await Promise.all([
       this.supabase.getCategories(),
       this.supabase.getAuthors()
@@ -89,6 +107,10 @@ export class AdminComponent implements OnInit {
 
   async refresh(): Promise<void> {
     this.posts = await this.supabase.getAllPosts();
+  }
+
+  async refreshEvents(): Promise<void> {
+    this.events = await this.supabase.getAllEvents();
   }
 
   blankForm(): PostForm {
@@ -171,6 +193,70 @@ export class AdminComponent implements OnInit {
     if (res.ok) {
       if (this.editingId === p.id) this.startNew();
       await this.refresh();
+    }
+  }
+
+  // ─────────────── Events ───────────────
+
+  blankEventForm(): EventForm {
+    return { name: '', event_date: '', location: '', blurb: '', body: '', published: true };
+  }
+
+  startNewEvent(): void {
+    this.editingEventId = null;
+    this.eventForm = this.blankEventForm();
+    this.eventMessage = '';
+  }
+
+  editEvent(e: EventRecord): void {
+    this.editingEventId = e.id;
+    this.eventMessage = '';
+    this.eventForm = {
+      name: e.name,
+      event_date: e.event_date,
+      location: e.location ?? '',
+      blurb: e.blurb ?? '',
+      body: e.body ?? '',
+      published: e.published
+    };
+  }
+
+  async saveEvent(): Promise<void> {
+    this.eventMessage = '';
+    if (!this.eventForm.name.trim() || !this.eventForm.event_date.trim()) {
+      this.eventMessage = 'Name and date are required.';
+      return;
+    }
+
+    const payload: Partial<EventRecord> = {
+      name: this.eventForm.name.trim(),
+      event_date: this.eventForm.event_date.trim(),
+      location: this.eventForm.location.trim() || null,
+      blurb: this.eventForm.blurb.trim() || null,
+      body: this.eventForm.body.trim() || null,
+      published: this.eventForm.published
+    };
+
+    this.savingEvent = true;
+    const res = this.editingEventId
+      ? await this.supabase.updateEvent(this.editingEventId, payload)
+      : await this.supabase.createEvent(payload);
+    this.savingEvent = false;
+
+    this.eventMessage = res.message;
+    if (res.ok) {
+      await this.refreshEvents();
+      this.startNewEvent();
+    }
+  }
+
+  async removeEvent(e: EventRecord): Promise<void> {
+    if (!confirm(`Delete "${e.name}"? This cannot be undone.`)) return;
+    const res = await this.supabase.deleteEvent(e.id);
+    this.eventMessage = res.message;
+    if (res.ok) {
+      if (this.editingEventId === e.id) this.startNewEvent();
+      await this.refreshEvents();
     }
   }
 

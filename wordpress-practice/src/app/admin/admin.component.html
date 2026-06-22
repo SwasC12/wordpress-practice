@@ -9,7 +9,14 @@
   </div>
 </header>
 
-<main class="admin-main">
+<div class="tabs">
+  <div class="bar">
+    <button class="tab" [class.active]="activeTab === 'posts'" (click)="activeTab = 'posts'">Posts</button>
+    <button class="tab" [class.active]="activeTab === 'events'" (click)="activeTab = 'events'">Events</button>
+  </div>
+</div>
+
+<main class="admin-main" *ngIf="activeTab === 'posts'">
   <!-- ===== Editor ===== -->
   <section class="panel editor">
     <h2>{{ editingId ? 'Edit post' : 'New post' }}</h2>
@@ -122,6 +129,81 @@
         <div class="row-actions">
           <button class="ghost" (click)="editPost(p)">Edit</button>
           <button class="ghost danger" (click)="remove(p)">Delete</button>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<!-- ===== Events tab ===== -->
+<main class="admin-main" *ngIf="activeTab === 'events'">
+  <!-- Editor -->
+  <section class="panel editor">
+    <h2>{{ editingEventId ? 'Edit event' : 'New event' }}</h2>
+
+    <label>
+      <span>Name</span>
+      <input [(ngModel)]="eventForm.name" placeholder="Cars & Coffee — Summer Meet" />
+    </label>
+
+    <label>
+      <span>Date (display text)</span>
+      <input [(ngModel)]="eventForm.event_date" placeholder="Sat, Jul 11" />
+    </label>
+
+    <label>
+      <span>Location</span>
+      <input [(ngModel)]="eventForm.location" placeholder="Riverside Car Park" />
+    </label>
+
+    <label>
+      <span>Blurb</span>
+      <textarea rows="2" [(ngModel)]="eventForm.blurb" placeholder="Short one-line description shown on the card."></textarea>
+    </label>
+
+    <label>
+      <span>Details (optional)</span>
+      <textarea rows="5" [(ngModel)]="eventForm.body" placeholder="Longer description…"></textarea>
+    </label>
+
+    <label class="check">
+      <input type="checkbox" [(ngModel)]="eventForm.published" />
+      <span>Published (visible on site)</span>
+    </label>
+
+    <p class="message" *ngIf="eventMessage">{{ eventMessage }}</p>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="saveEvent()" [disabled]="savingEvent">
+        {{ savingEvent ? 'Saving…' : (editingEventId ? 'Update event' : 'Create event') }}
+      </button>
+      <button class="btn btn-outline" *ngIf="editingEventId" (click)="startNewEvent()">Cancel</button>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section class="panel list">
+    <div class="list-head">
+      <h2>Events</h2>
+      <button class="btn btn-outline" (click)="startNewEvent()">+ New</button>
+    </div>
+
+    <p class="muted" *ngIf="loading">Loading…</p>
+    <p class="muted" *ngIf="!loading && events.length === 0">No events yet. Create your first one.</p>
+
+    <ul class="post-rows">
+      <li class="post-row" *ngFor="let e of events" [class.editing]="editingEventId === e.id">
+        <span class="event-date-chip">{{ e.event_date }}</span>
+        <div class="post-meta">
+          <span class="post-title">{{ e.name }}</span>
+          <span class="post-slug" *ngIf="e.location">📍 {{ e.location }}</span>
+        </div>
+        <span class="badge" [class.draft]="!e.published">
+          {{ e.published ? 'Published' : 'Draft' }}
+        </span>
+        <div class="row-actions">
+          <button class="ghost" (click)="editEvent(e)">Edit</button>
+          <button class="ghost danger" (click)="removeEvent(e)">Delete</button>
         </div>
       </li>
     </ul>
