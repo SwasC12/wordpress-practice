@@ -4,6 +4,7 @@ import { environment } from '../environments/environment';
 export interface UploadResult {
   url: string;          // hosted secure URL
   resourceType: string; // 'image' | 'video'
+  deleteToken?: string; // short-lived (~10 min) token to undo this upload
 }
 
 @Injectable({ providedIn: 'root' })
@@ -27,7 +28,29 @@ export class CloudinaryService {
       throw new Error(`Cloudinary upload failed (${res.status}): ${detail}`);
     }
     const data = await res.json();
-    return { url: data.secure_url as string, resourceType: data.resource_type as string };
+    return {
+      url: data.secure_url as string,
+      resourceType: data.resource_type as string,
+      deleteToken: data.delete_token as string | undefined
+    };
+  }
+
+  /**
+   * Delete a just-uploaded asset using its delete token (no API secret needed).
+   * Only valid for ~10 minutes after upload. Best-effort — errors are ignored.
+   */
+  async deleteByToken(token: string): Promise<void> {
+    const { cloudinaryCloudName } = environment;
+    const url = `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/delete_by_token`;
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+    } catch {
+      /* best-effort cleanup; ignore */
+    }
   }
 
   /** True if a stored cover URL points at a Cloudinary video. */

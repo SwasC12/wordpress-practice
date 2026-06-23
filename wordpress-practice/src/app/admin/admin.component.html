@@ -137,7 +137,7 @@
     <div class="cover-preview" *ngIf="form.cover_url">
       <img *ngIf="!coverIsVideo(form.cover_url)" [src]="form.cover_url" alt="cover preview" />
       <video *ngIf="coverIsVideo(form.cover_url)" [src]="form.cover_url" autoplay muted loop playsinline></video>
-      <button type="button" class="ghost danger" (click)="form.cover_url = ''">Remove cover</button>
+      <button type="button" class="ghost danger" (click)="removeCover()">Remove cover</button>
     </div>
 
     <label *ngIf="!form.cover_url">

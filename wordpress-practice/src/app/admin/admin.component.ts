@@ -75,8 +75,19 @@ export class AdminComponent implements OnInit {
     private router: Router
   ) {}
 
+  // Delete token for an image uploaded but not yet saved (so we can undo it)
+  private pendingDeleteToken: string | null = null;
+
   coverIsVideo(url: string): boolean {
     return CloudinaryService.isVideo(url);
+  }
+
+  /** Remove an uploaded-but-unsaved image from Cloudinary (re-choose / cancel). */
+  private async discardPendingUpload(): Promise<void> {
+    if (this.pendingDeleteToken) {
+      await this.cloudinary.deleteByToken(this.pendingDeleteToken);
+      this.pendingDeleteToken = null;
+    }
   }
 
   async onFile(event: Event): Promise<void> {
@@ -87,14 +98,23 @@ export class AdminComponent implements OnInit {
     this.message = '';
     this.uploading = true;
     try {
+      // If they're replacing an image they just uploaded, delete the old one first
+      await this.discardPendingUpload();
       const result = await this.cloudinary.upload(file);
       this.form.cover_url = result.url;
+      this.pendingDeleteToken = result.deleteToken ?? null;
     } catch (err: any) {
       this.message = err?.message ?? 'Upload failed.';
     } finally {
       this.uploading = false;
       input.value = ''; // allow re-selecting the same file
     }
+  }
+
+  /** "Remove cover" button — also cleans up Cloudinary if it was just uploaded. */
+  async removeCover(): Promise<void> {
+    await this.discardPendingUpload();
+    this.form.cover_url = '';
   }
 
   async ngOnInit(): Promise<void> {
@@ -156,13 +176,15 @@ export class AdminComponent implements OnInit {
       .replace(/^-+|-+$/g, '');
   }
 
-  startNew(): void {
+  async startNew(): Promise<void> {
+    await this.discardPendingUpload();
     this.editingId = null;
     this.form = this.blankForm();
     this.message = '';
   }
 
-  editPost(p: PostRecord): void {
+  async editPost(p: PostRecord): Promise<void> {
+    await this.discardPendingUpload();
     this.editingId = p.id;
     this.message = '';
     this.form = {
@@ -207,6 +229,7 @@ export class AdminComponent implements OnInit {
 
     this.message = res.message;
     if (res.ok) {
+      this.pendingDeleteToken = null; // saved — keep the image, don't discard it
       await this.refresh();
       this.startNew();
     }
