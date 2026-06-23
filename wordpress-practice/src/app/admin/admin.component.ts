@@ -50,7 +50,9 @@ export class AdminComponent implements OnInit {
   authors: NamedRow[] = [];
   gradients = GRADIENT_PRESETS;
 
-  activeTab: 'posts' | 'events' = 'posts';
+  activeTab: 'overview' | 'posts' | 'events' = 'overview';
+
+  subscribers: { email: string; created_at: string }[] = [];
 
   loading = true;
   saving = false;
@@ -98,11 +100,35 @@ export class AdminComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.userEmail = (await this.supabase.currentUserEmail()) ?? '';
     await Promise.all([this.refresh(), this.refreshEvents()]);
-    [this.categories, this.authors] = await Promise.all([
+    [this.categories, this.authors, this.subscribers] = await Promise.all([
       this.supabase.getCategories(),
-      this.supabase.getAuthors()
+      this.supabase.getAuthors(),
+      this.supabase.getSubscribers()
     ]);
     this.loading = false;
+  }
+
+  // ─────────────── Overview stats (computed from already-loaded data) ───────────────
+
+  get publishedPosts(): number { return this.posts.filter(p => p.published).length; }
+  get draftPosts(): number { return this.posts.filter(p => !p.published).length; }
+  get publishedEvents(): number { return this.events.filter(e => e.published).length; }
+
+  /** [{ name, count }] of published posts per category, busiest first. */
+  get postsByCategory(): { name: string; count: number }[] {
+    const nameById = new Map(this.categories.map(c => [c.id, c.name]));
+    const counts = new Map<string, number>();
+    for (const p of this.posts) {
+      const name = (p.category_id && nameById.get(p.category_id)) || 'Uncategorised';
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  get recentSubscribers(): { email: string; created_at: string }[] {
+    return this.subscribers.slice(0, 8);
   }
 
   async refresh(): Promise<void> {

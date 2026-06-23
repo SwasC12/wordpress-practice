@@ -11,10 +11,67 @@
 
 <div class="tabs">
   <div class="bar">
+    <button class="tab" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
     <button class="tab" [class.active]="activeTab === 'posts'" (click)="activeTab = 'posts'">Posts</button>
     <button class="tab" [class.active]="activeTab === 'events'" (click)="activeTab = 'events'">Events</button>
   </div>
 </div>
+
+<!-- ===== Overview tab ===== -->
+<main class="admin-main single" *ngIf="activeTab === 'overview'">
+  <p class="muted" *ngIf="loading">Loading…</p>
+
+  <div *ngIf="!loading">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-num">{{ posts.length }}</span>
+        <span class="stat-label">Posts</span>
+        <span class="stat-sub">{{ publishedPosts }} live · {{ draftPosts }} draft</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ events.length }}</span>
+        <span class="stat-label">Events</span>
+        <span class="stat-sub">{{ publishedEvents }} live</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ subscribers.length }}</span>
+        <span class="stat-label">Subscribers</span>
+        <span class="stat-sub">newsletter signups</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ categories.length }}</span>
+        <span class="stat-label">Categories</span>
+      </div>
+    </div>
+
+    <div class="overview-cols">
+      <section class="panel">
+        <h2>Posts by category</h2>
+        <p class="muted" *ngIf="postsByCategory.length === 0">No posts yet.</p>
+        <ul class="bar-list">
+          <li *ngFor="let row of postsByCategory">
+            <span class="bar-label">{{ row.name }}</span>
+            <span class="bar-track">
+              <span class="bar-fill" [style.width.%]="(row.count / posts.length) * 100"></span>
+            </span>
+            <span class="bar-count">{{ row.count }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Recent subscribers</h2>
+        <p class="muted" *ngIf="recentSubscribers.length === 0">No subscribers yet.</p>
+        <ul class="sub-list">
+          <li *ngFor="let s of recentSubscribers">
+            <span class="sub-email">{{ s.email }}</span>
+            <span class="sub-date">{{ s.created_at | date:'mediumDate' }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</main>
 
 <main class="admin-main" *ngIf="activeTab === 'posts'">
   <!-- ===== Editor ===== -->

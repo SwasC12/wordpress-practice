@@ -229,6 +229,19 @@ export class SupabaseService {
     return { ok: true, message: 'Event deleted' };
   }
 
+  /** Newsletter subscribers — admin only (RLS). */
+  async getSubscribers(): Promise<{ email: string; created_at: string }[]> {
+    const { data, error } = await this.client
+      .from('subscribers')
+      .select('email, created_at')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('getSubscribers failed:', error.message);
+      return [];
+    }
+    return (data ?? []) as { email: string; created_at: string }[];
+  }
+
   async getCategories(): Promise<NamedRow[]> {
     const { data } = await this.client.from('categories').select('id, name').order('name');
     return (data ?? []) as NamedRow[];
