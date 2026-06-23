@@ -43,8 +43,8 @@
   <!-- Body -->
   <div class="container body">
     <p class="lead" *ngIf="p.excerpt">{{ p.excerpt }}</p>
-    <p *ngFor="let para of paragraphs">{{ para }}</p>
-    <p class="empty" *ngIf="paragraphs.length === 0">No content for this article yet.</p>
+    <div class="article-body" *ngIf="p.body" [innerHTML]="p.body"></div>
+    <p class="empty" *ngIf="!p.body">No content for this article yet.</p>
 
     <a class="btn btn-outline back-btn" routerLink="/">← Back to all stories</a>
   </div>

@@ -7,6 +7,7 @@ import { CloudinaryService } from '../cloudinary.service';
 import { DeleteConfirmationComponent } from '../components/delete-confirmation.component';
 import { SpinnerComponent } from '../shared/spinner.component';
 import { ToastService } from '../shared/toast.service';
+import { RichEditorComponent } from '../shared/rich-editor.component';
 
 type PendingDelete = { title: string; message: string; action: () => Promise<void> };
 
@@ -52,7 +53,7 @@ const GRADIENT_PRESETS = [
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, DeleteConfirmationComponent, SpinnerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, DeleteConfirmationComponent, SpinnerComponent, RichEditorComponent],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
@@ -60,6 +61,11 @@ export class AdminComponent implements OnInit {
   // Shared delete-confirmation modal state (posts, events, sponsors all use it)
   pendingDelete: PendingDelete | null = null;
   deleting = false;
+
+  // New-subscriber bell
+  private readonly subsSeenKey = 'gh_admin_subs_seen';
+  private subsLastSeen = 0;
+  showBell = false;
 
   userEmail = '';
   posts: PostRecord[] = [];
@@ -141,6 +147,7 @@ export class AdminComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
+    this.loadSubsSeen();
     this.userEmail = (await this.supabase.currentUserEmail()) ?? '';
     await Promise.all([this.refresh(), this.refreshEvents(), this.refreshSponsors()]);
     [this.categories, this.authors, this.subscribers] = await Promise.all([
@@ -172,6 +179,37 @@ export class AdminComponent implements OnInit {
 
   get recentSubscribers(): { email: string; created_at: string }[] {
     return this.subscribers.slice(0, 8);
+  }
+
+  // ─────────────── New-subscriber bell ───────────────
+
+  private loadSubsSeen(): void {
+    const stored = localStorage.getItem(this.subsSeenKey);
+    if (stored) {
+      this.subsLastSeen = Number(stored);
+    } else {
+      // First time: treat everything so far as already seen (don't flood the bell)
+      this.subsLastSeen = Date.now();
+      localStorage.setItem(this.subsSeenKey, String(this.subsLastSeen));
+    }
+  }
+
+  get newSubscribers(): { email: string; created_at: string }[] {
+    return this.subscribers.filter(s => new Date(s.created_at).getTime() > this.subsLastSeen);
+  }
+
+  get newSubCount(): number {
+    return this.newSubscribers.length;
+  }
+
+  toggleBell(): void {
+    this.showBell = !this.showBell;
+  }
+
+  markSubsSeen(): void {
+    this.subsLastSeen = Date.now();
+    localStorage.setItem(this.subsSeenKey, String(this.subsLastSeen));
+    this.showBell = false;
   }
 
   async refresh(): Promise<void> {

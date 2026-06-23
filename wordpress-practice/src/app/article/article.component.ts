@@ -30,12 +30,4 @@ export class ArticleComponent implements OnInit {
     });
   }
 
-  /** Split the stored plain-text body into paragraphs on blank lines. */
-  get paragraphs(): string[] {
-    if (!this.post?.body) return [];
-    return this.post.body
-      .split(/\n\s*\n/)
-      .map(p => p.trim())
-      .filter(Boolean);
-  }
 }

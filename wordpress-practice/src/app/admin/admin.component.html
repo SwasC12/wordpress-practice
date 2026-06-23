@@ -2,6 +2,29 @@
   <div class="bar">
     <a class="logo" routerLink="/">Gearheads <span>admin</span></a>
     <div class="bar-right">
+      <div class="bell-wrap">
+        <button class="ghost bell" (click)="toggleBell()" aria-label="Notifications">
+          🔔
+          @if (newSubCount > 0) { <span class="bell-badge">{{ newSubCount }}</span> }
+        </button>
+        @if (showBell) {
+          <div class="bell-panel">
+            <div class="bell-head">
+              <span>New subscribers</span>
+              @if (newSubCount > 0) { <button class="ghost small" (click)="markSubsSeen()">Mark seen</button> }
+            </div>
+            @if (newSubCount === 0) {
+              <p class="bell-empty">No new subscribers since you last checked.</p>
+            }
+            @for (s of newSubscribers; track s.email) {
+              <div class="bell-item">
+                <span class="bell-email">{{ s.email }}</span>
+                <span class="bell-date">{{ s.created_at | date:'MMM d' }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
       <span class="user" *ngIf="userEmail">{{ userEmail }}</span>
       <a class="ghost" routerLink="/">View site</a>
       <button class="ghost" (click)="signOut()">Sign out</button>
@@ -96,7 +119,7 @@
 
     <label>
       <span>Body</span>
-      <textarea rows="6" [(ngModel)]="form.body" placeholder="Full article text…"></textarea>
+      <app-rich-editor [(value)]="form.body"></app-rich-editor>
     </label>
 
     <div class="row">
