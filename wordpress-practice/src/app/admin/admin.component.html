@@ -117,10 +117,10 @@
       <textarea rows="2" [(ngModel)]="form.excerpt" placeholder="One or two line summary shown on the card."></textarea>
     </label>
 
-    <label>
-      <span>Body</span>
+    <div class="editor-field">
+      <span class="field-label">Body</span>
       <app-rich-editor [(value)]="form.body"></app-rich-editor>
-    </label>
+    </div>
 
     <div class="row">
       <label>
