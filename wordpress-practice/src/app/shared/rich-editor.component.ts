@@ -21,10 +21,12 @@ import { ToastService } from './toast.service';
         <button type="button" title="Bulleted list" (mousedown)="$event.preventDefault()" (click)="cmd('insertUnorderedList')">• List</button>
         <button type="button" title="Add link" (mousedown)="$event.preventDefault()" (click)="addLink()">🔗</button>
         <button type="button" title="Insert image" (mousedown)="$event.preventDefault()" (click)="fileInput.click()">🖼 Image</button>
+        <button type="button" title="Remove selected image" (mousedown)="$event.preventDefault()" (click)="removeImage()">🗑 Image</button>
         @if (uploading) { <span class="up">Uploading…</span> }
         <input #fileInput type="file" accept="image/*" hidden (change)="onImage($event)" />
       </div>
-      <div #editor class="editor" contenteditable="true" (input)="emit()" (blur)="emit()"></div>
+      <div #editor class="editor" contenteditable="true" (input)="emit()" (blur)="emit()" (click)="onEditorClick($event)"></div>
+      <p class="hint">Tip: click an image to select it, then press Delete or the 🗑 button to remove it.</p>
     </div>
   `,
   styles: [`
@@ -37,13 +39,16 @@ import { ToastService } from './toast.service';
     .toolbar button:hover { border-color: #ff5722; color: #ff5722; }
     .up { color: #ffa726; font-size: .82rem; align-self: center; margin-left: 4px; }
     .editor {
-      min-height: 200px; padding: 14px; color: #e7e9ee; outline: none;
-      font: inherit; line-height: 1.6;
+      min-height: 340px; padding: 18px; color: #e7e9ee; outline: none;
+      font: inherit; font-size: 1.02rem; line-height: 1.7;
     }
     .editor:empty:before { content: 'Write your article…'; color: #6b7280; }
-    .editor img { max-width: 100%; border-radius: 8px; margin: 8px 0; }
-    .editor h3 { font-size: 1.25rem; margin: 14px 0 8px; }
+    .editor img { max-width: 100%; border-radius: 8px; margin: 8px 0; cursor: pointer; }
+    .editor h3 { font-size: 1.3rem; margin: 18px 0 10px; }
+    .editor p { margin: 0 0 14px; }
+    .editor ul, .editor ol { margin: 0 0 14px; padding-left: 22px; }
     .editor a { color: #ff7a4d; }
+    .hint { margin: 8px 2px 0; font-size: .78rem; color: #6b7280; }
   `]
 })
 export class RichEditorComponent implements AfterViewInit, OnChanges {
@@ -52,6 +57,7 @@ export class RichEditorComponent implements AfterViewInit, OnChanges {
   @ViewChild('editor') editorRef!: ElementRef<HTMLDivElement>;
 
   uploading = false;
+  private selectedImg: HTMLImageElement | null = null;
   private cloud = inject(CloudinaryService);
   private toast = inject(ToastService);
 
@@ -72,6 +78,31 @@ export class RichEditorComponent implements AfterViewInit, OnChanges {
 
   emit(): void {
     this.valueChange.emit(this.editorRef.nativeElement.innerHTML);
+  }
+
+  /** Click an image to select it (native highlight) so Delete or the 🗑 button removes it. */
+  onEditorClick(e: MouseEvent): void {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      this.selectedImg = target as HTMLImageElement;
+      const range = document.createRange();
+      range.selectNode(target);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    } else {
+      this.selectedImg = null;
+    }
+  }
+
+  removeImage(): void {
+    if (!this.selectedImg) {
+      this.toast.error('Click an image first, then remove it.');
+      return;
+    }
+    this.selectedImg.remove();
+    this.selectedImg = null;
+    this.emit();
   }
 
   cmd(command: string): void {

@@ -73,14 +73,17 @@
 .body .empty { color: var(--muted); }
 
 /* Rich-text article body (rendered from the editor's HTML) */
-.article-body { font-size: 1.08rem; color: #d7dae1; }
-.article-body p { margin: 0 0 20px; }
-.article-body h3 { color: var(--text); font-size: 1.4rem; margin: 28px 0 12px; }
-.article-body ul, .article-body ol { margin: 0 0 20px; padding-left: 22px; }
-.article-body li { margin-bottom: 6px; }
+.article-body { font-size: 1.12rem; color: #d7dae1; line-height: 1.8; }
+.article-body p, .article-body div { margin: 0 0 18px; }
+.article-body p:empty, .article-body div:empty { margin: 0 0 10px; }
+.article-body h3 { color: var(--text); font-size: 1.5rem; line-height: 1.25; margin: 32px 0 12px; }
+.article-body ul, .article-body ol { margin: 0 0 18px; padding-left: 24px; }
+.article-body li { margin-bottom: 8px; }
 .article-body a { color: var(--accent); text-decoration: underline; }
-.article-body img { max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0; display: block; }
-.article-body b, .article-body strong { color: var(--text); }
+.article-body img {
+  max-width: 100%; height: auto; border-radius: 12px; margin: 22px 0; display: block;
+}
+.article-body b, .article-body strong { color: var(--text); font-weight: 700; }
 
 /* Buttons */
 .btn { font: inherit; font-weight: 600; border: none; border-radius: 999px; padding: 11px 22px; cursor: pointer; text-decoration: none; display: inline-block; }
