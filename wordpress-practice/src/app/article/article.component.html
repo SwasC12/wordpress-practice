@@ -7,7 +7,7 @@
 
 <!-- Loading -->
 <div class="container" *ngIf="loading">
-  <p class="state-msg">Loading article…</p>
+  <app-spinner label="Loading article…"></app-spinner>
 </div>
 
 <!-- Not found -->
@@ -49,3 +49,5 @@
     <a class="btn btn-outline back-btn" routerLink="/">← Back to all stories</a>
   </div>
 </article>
+
+<app-back-to-top></app-back-to-top>

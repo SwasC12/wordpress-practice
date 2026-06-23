@@ -50,7 +50,7 @@
 
 <!-- Loading / empty states -->
 <section class="section" *ngIf="loading">
-  <div class="container"><p class="state-msg">Loading stories…</p></div>
+  <div class="container"><app-spinner label="Loading stories…"></app-spinner></div>
 </section>
 <section class="section" *ngIf="!loading && !featured">
   <div class="container"><p class="state-msg">No posts yet — add some in the admin.</p></div>
@@ -64,7 +64,7 @@
       <a class="link" href="#">View all →</a>
     </div>
     <div class="post-grid">
-      <article class="post-card clickable" *ngFor="let post of posts" [routerLink]="['/post', post.slug]">
+      <article class="post-card clickable" *ngFor="let post of posts" [routerLink]="['/post', post.slug]" appReveal>
         <div class="post-image" [style.background]="post.coverUrl ? null : post.gradient">
           <img *ngIf="post.coverUrl && !post.coverIsVideo" class="cover-media" [src]="post.coverUrl" alt="" />
           <video *ngIf="post.coverUrl && post.coverIsVideo" class="cover-media" [src]="post.coverUrl"
@@ -95,7 +95,7 @@
       <a class="link" href="#">Full calendar →</a>
     </div>
     <div class="event-list">
-      <article class="event-card" *ngFor="let e of events">
+      <article class="event-card" *ngFor="let e of events" appReveal>
         <div class="event-date">{{ e.date }}</div>
         <div class="event-info">
           <h3 class="event-name">{{ e.name }}</h3>
@@ -153,3 +153,5 @@
     <span>© 2026 {{ brand }}. All rights reserved.</span>
   </div>
 </footer>
+
+<app-back-to-top></app-back-to-top>

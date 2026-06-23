@@ -2,11 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SupabaseService, FullPost } from '../supabase.service';
+import { SpinnerComponent } from '../shared/spinner.component';
+import { BackToTopComponent } from '../shared/back-to-top.component';
 
 @Component({
   selector: 'app-article',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, SpinnerComponent, BackToTopComponent],
   templateUrl: './article.component.html',
   styleUrls: ['./article.component.css']
 })

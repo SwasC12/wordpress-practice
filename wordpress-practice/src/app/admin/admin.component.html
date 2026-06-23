@@ -20,7 +20,7 @@
 
 <!-- ===== Overview tab ===== -->
 <main class="admin-main single" *ngIf="activeTab === 'overview'">
-  <p class="muted" *ngIf="loading">Loading…</p>
+  <app-spinner *ngIf="loading" label="Loading dashboard…"></app-spinner>
 
   <div *ngIf="!loading">
     <div class="stat-grid">
@@ -344,3 +344,13 @@
     </ul>
   </section>
 </main>
+
+<!-- Shared delete confirmation modal (posts, events, sponsors) -->
+<app-delete-confirmation
+  *ngIf="pendingDelete"
+  [title]="pendingDelete.title"
+  [message]="pendingDelete.message"
+  [busy]="deleting"
+  (confirmed)="confirmDelete()"
+  (cancelled)="cancelDelete()">
+</app-delete-confirmation>

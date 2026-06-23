@@ -4,6 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { SupabaseService, PostRecord, EventRecord, SponsorRecord, NamedRow } from '../supabase.service';
 import { CloudinaryService } from '../cloudinary.service';
+import { DeleteConfirmationComponent } from '../components/delete-confirmation.component';
+import { SpinnerComponent } from '../shared/spinner.component';
+
+type PendingDelete = { title: string; message: string; action: () => Promise<void> };
 
 type SponsorForm = {
   business_name: string;
@@ -47,11 +51,15 @@ const GRADIENT_PRESETS = [
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, DeleteConfirmationComponent, SpinnerComponent],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
+  // Shared delete-confirmation modal state (posts, events, sponsors all use it)
+  pendingDelete: PendingDelete | null = null;
+  deleting = false;
+
   userEmail = '';
   posts: PostRecord[] = [];
   categories: NamedRow[] = [];
@@ -252,14 +260,15 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  async remove(p: PostRecord): Promise<void> {
-    if (!confirm(`Delete "${p.title}"? This cannot be undone.`)) return;
-    const res = await this.supabase.deletePost(p.id);
-    this.message = res.message;
-    if (res.ok) {
-      if (this.editingId === p.id) this.startNew();
-      await this.refresh();
-    }
+  remove(p: PostRecord): void {
+    this.askDelete('Delete post?', `"${p.title}" will be permanently deleted.`, async () => {
+      const res = await this.supabase.deletePost(p.id);
+      this.message = res.message;
+      if (res.ok) {
+        if (this.editingId === p.id) await this.startNew();
+        await this.refresh();
+      }
+    });
   }
 
   // ─────────────── Events ───────────────
@@ -316,14 +325,15 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  async removeEvent(e: EventRecord): Promise<void> {
-    if (!confirm(`Delete "${e.name}"? This cannot be undone.`)) return;
-    const res = await this.supabase.deleteEvent(e.id);
-    this.eventMessage = res.message;
-    if (res.ok) {
-      if (this.editingEventId === e.id) this.startNewEvent();
-      await this.refreshEvents();
-    }
+  removeEvent(e: EventRecord): void {
+    this.askDelete('Delete event?', `"${e.name}" will be permanently deleted.`, async () => {
+      const res = await this.supabase.deleteEvent(e.id);
+      this.eventMessage = res.message;
+      if (res.ok) {
+        if (this.editingEventId === e.id) await this.startNewEvent();
+        await this.refreshEvents();
+      }
+    });
   }
 
   // ─────────────── Sponsors / flyers ───────────────
@@ -417,18 +427,40 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  async removeSponsor(s: SponsorRecord): Promise<void> {
-    if (!confirm(`Delete sponsor "${s.business_name}"?`)) return;
-    const res = await this.supabase.deleteSponsor(s.id);
-    this.sponsorMessage = res.message;
-    if (res.ok) {
-      if (this.editingSponsorId === s.id) this.startNewSponsor();
-      await this.refreshSponsors();
-    }
+  removeSponsor(s: SponsorRecord): void {
+    this.askDelete('Delete sponsor?', `"${s.business_name}" will be permanently removed.`, async () => {
+      const res = await this.supabase.deleteSponsor(s.id);
+      this.sponsorMessage = res.message;
+      if (res.ok) {
+        if (this.editingSponsorId === s.id) await this.startNewSponsor();
+        await this.refreshSponsors();
+      }
+    });
   }
 
   async signOut(): Promise<void> {
     await this.supabase.signOut();
     this.router.navigate(['/login']);
+  }
+
+  // ─────────────── Shared delete confirmation modal ───────────────
+
+  private askDelete(title: string, message: string, action: () => Promise<void>): void {
+    this.pendingDelete = { title, message, action };
+  }
+
+  async confirmDelete(): Promise<void> {
+    if (!this.pendingDelete) return;
+    this.deleting = true;
+    try {
+      await this.pendingDelete.action();
+    } finally {
+      this.deleting = false;
+      this.pendingDelete = null;
+    }
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting) this.pendingDelete = null;
   }
 }

@@ -4,11 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SupabaseService, Post, CarEvent } from '../supabase.service';
 import { FlyersComponent } from '../flyers/flyers.component';
+import { SpinnerComponent } from '../shared/spinner.component';
+import { BackToTopComponent } from '../shared/back-to-top.component';
+import { RevealDirective } from '../shared/reveal.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, FlyersComponent],
+  imports: [CommonModule, FormsModule, RouterLink, FlyersComponent, SpinnerComponent, BackToTopComponent, RevealDirective],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
