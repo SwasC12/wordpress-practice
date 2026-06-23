@@ -203,12 +203,14 @@
           <span class="post-title">{{ p.title }}</span>
           <span class="post-slug">/{{ p.slug }}</span>
         </div>
-        <span class="badge" [class.draft]="!p.published">
-          {{ p.published ? 'Published' : 'Draft' }}
-        </span>
-        <div class="row-actions">
-          <button class="ghost" (click)="editPost(p)">Edit</button>
-          <button class="ghost danger" (click)="remove(p)">Delete</button>
+        <div class="post-side">
+          <span class="badge" [class.draft]="!p.published">
+            {{ p.published ? 'Published' : 'Draft' }}
+          </span>
+          <div class="row-actions">
+            <button class="ghost" (click)="editPost(p)">Edit</button>
+            <button class="ghost danger" (click)="remove(p)">Delete</button>
+          </div>
         </div>
       </li>
     </ul>
@@ -277,12 +279,14 @@
           <span class="post-title">{{ e.name }}</span>
           <span class="post-slug" *ngIf="e.location">📍 {{ e.location }}</span>
         </div>
-        <span class="badge" [class.draft]="!e.published">
-          {{ e.published ? 'Published' : 'Draft' }}
-        </span>
-        <div class="row-actions">
-          <button class="ghost" (click)="editEvent(e)">Edit</button>
-          <button class="ghost danger" (click)="removeEvent(e)">Delete</button>
+        <div class="post-side">
+          <span class="badge" [class.draft]="!e.published">
+            {{ e.published ? 'Published' : 'Draft' }}
+          </span>
+          <div class="row-actions">
+            <button class="ghost" (click)="editEvent(e)">Edit</button>
+            <button class="ghost danger" (click)="removeEvent(e)">Delete</button>
+          </div>
         </div>
       </li>
     </ul>
@@ -353,12 +357,14 @@
           <span class="post-title">{{ s.business_name }}</span>
           <span class="post-slug">order {{ s.sort_order }}</span>
         </div>
-        <span class="badge" [class.draft]="!s.active">
-          {{ s.active ? 'Active' : 'Hidden' }}
-        </span>
-        <div class="row-actions">
-          <button class="ghost" (click)="editSponsor(s)">Edit</button>
-          <button class="ghost danger" (click)="removeSponsor(s)">Delete</button>
+        <div class="post-side">
+          <span class="badge" [class.draft]="!s.active">
+            {{ s.active ? 'Active' : 'Hidden' }}
+          </span>
+          <div class="row-actions">
+            <button class="ghost" (click)="editSponsor(s)">Edit</button>
+            <button class="ghost danger" (click)="removeSponsor(s)">Delete</button>
+          </div>
         </div>
       </li>
     </ul>
