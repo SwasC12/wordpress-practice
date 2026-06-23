@@ -162,3 +162,9 @@ label.check input { width: auto; }
 @media (max-width: 860px) {
   .admin-main { grid-template-columns: 1fr; }
 }
+@media (max-width: 560px) {
+  .editor .row { flex-direction: column; gap: 0; }
+  .bar { padding: 0 16px; }
+  .bar-right { gap: 10px; }
+  .admin-main { padding: 20px 16px 50px; }
+}

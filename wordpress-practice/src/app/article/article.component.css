@@ -82,3 +82,11 @@
 .notfound { text-align: center; padding: 80px 0; }
 .notfound h1 { font-size: 2rem; margin: 0 0 10px; }
 .notfound p { color: var(--muted); margin: 0 0 24px; }
+
+@media (max-width: 560px) {
+  .container { padding: 0 16px; }
+  .cover { min-height: 240px; margin-bottom: 24px; }
+  .cover-content { padding-top: 24px; padding-bottom: 24px; }
+  .body p { font-size: 1rem; }
+  .body .lead { font-size: 1.1rem; }
+}

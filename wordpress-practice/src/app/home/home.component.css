@@ -195,7 +195,7 @@
 /* ===== Post grid ===== */
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 28px;
 }
 .post-card {
@@ -306,6 +306,18 @@
 @media (max-width: 820px) {
   .nav-links { display: none; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
-  .event-card { flex-wrap: wrap; }
+  .event-card { flex-wrap: wrap; gap: 14px; }
   .event-date { flex-basis: auto; }
+}
+
+@media (max-width: 560px) {
+  .container { padding: 0 16px; }
+  .hero { padding: 56px 0 44px; }
+  .section { padding: 36px 0; }
+  .cta { padding: 48px 0; }
+  .section-head { flex-wrap: wrap; gap: 8px; }
+  .featured-content { padding: 24px; }
+  .search-bar { flex-direction: column; }
+  .search-bar .btn { width: 100%; }
+  .event-card .btn { width: 100%; }
 }
