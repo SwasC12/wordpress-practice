@@ -6,6 +6,7 @@ import { SupabaseService, PostRecord, EventRecord, SponsorRecord, NamedRow } fro
 import { CloudinaryService } from '../cloudinary.service';
 import { DeleteConfirmationComponent } from '../components/delete-confirmation.component';
 import { SpinnerComponent } from '../shared/spinner.component';
+import { ToastService } from '../shared/toast.service';
 
 type PendingDelete = { title: string; message: string; action: () => Promise<void> };
 
@@ -73,7 +74,6 @@ export class AdminComponent implements OnInit {
   loading = true;
   saving = false;
   uploading = false;
-  message = '';
   editingId: string | null = null;
 
   form: PostForm = this.blankForm();
@@ -83,7 +83,6 @@ export class AdminComponent implements OnInit {
   eventForm: EventForm = this.blankEventForm();
   editingEventId: string | null = null;
   savingEvent = false;
-  eventMessage = '';
 
   // Sponsors
   sponsors: SponsorRecord[] = [];
@@ -91,12 +90,12 @@ export class AdminComponent implements OnInit {
   editingSponsorId: string | null = null;
   savingSponsor = false;
   sponsorUploading = false;
-  sponsorMessage = '';
   private sponsorDeleteToken: string | null = null;
 
   constructor(
     private supabase: SupabaseService,
     private cloudinary: CloudinaryService,
+    private toast: ToastService,
     private router: Router
   ) {}
 
@@ -120,7 +119,6 @@ export class AdminComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
-    this.message = '';
     this.uploading = true;
     try {
       // If they're replacing an image they just uploaded, delete the old one first
@@ -129,7 +127,7 @@ export class AdminComponent implements OnInit {
       this.form.cover_url = result.url;
       this.pendingDeleteToken = result.deleteToken ?? null;
     } catch (err: any) {
-      this.message = err?.message ?? 'Upload failed.';
+      this.toast.error(err?.message ?? 'Upload failed.');
     } finally {
       this.uploading = false;
       input.value = ''; // allow re-selecting the same file
@@ -205,13 +203,11 @@ export class AdminComponent implements OnInit {
     await this.discardPendingUpload();
     this.editingId = null;
     this.form = this.blankForm();
-    this.message = '';
   }
 
   async editPost(p: PostRecord): Promise<void> {
     await this.discardPendingUpload();
     this.editingId = p.id;
-    this.message = '';
     this.form = {
       title: p.title,
       slug: p.slug,
@@ -227,9 +223,8 @@ export class AdminComponent implements OnInit {
   }
 
   async save(): Promise<void> {
-    this.message = '';
     if (!this.form.title.trim() || !this.form.slug.trim()) {
-      this.message = 'Title and slug are required.';
+      this.toast.error('Title and slug are required.');
       return;
     }
 
@@ -252,7 +247,7 @@ export class AdminComponent implements OnInit {
       : await this.supabase.createPost(payload);
     this.saving = false;
 
-    this.message = res.message;
+    this.toast.show(res.message, res.ok ? 'success' : 'error');
     if (res.ok) {
       this.pendingDeleteToken = null; // saved — keep the image, don't discard it
       await this.refresh();
@@ -263,7 +258,7 @@ export class AdminComponent implements OnInit {
   remove(p: PostRecord): void {
     this.askDelete('Delete post?', `"${p.title}" will be permanently deleted.`, async () => {
       const res = await this.supabase.deletePost(p.id);
-      this.message = res.message;
+      this.toast.show(res.message, res.ok ? 'success' : 'error');
       if (res.ok) {
         if (this.editingId === p.id) await this.startNew();
         await this.refresh();
@@ -280,12 +275,10 @@ export class AdminComponent implements OnInit {
   startNewEvent(): void {
     this.editingEventId = null;
     this.eventForm = this.blankEventForm();
-    this.eventMessage = '';
   }
 
   editEvent(e: EventRecord): void {
     this.editingEventId = e.id;
-    this.eventMessage = '';
     this.eventForm = {
       name: e.name,
       event_date: e.event_date,
@@ -297,9 +290,8 @@ export class AdminComponent implements OnInit {
   }
 
   async saveEvent(): Promise<void> {
-    this.eventMessage = '';
     if (!this.eventForm.name.trim() || !this.eventForm.event_date.trim()) {
-      this.eventMessage = 'Name and date are required.';
+      this.toast.error('Name and date are required.');
       return;
     }
 
@@ -318,7 +310,7 @@ export class AdminComponent implements OnInit {
       : await this.supabase.createEvent(payload);
     this.savingEvent = false;
 
-    this.eventMessage = res.message;
+    this.toast.show(res.message, res.ok ? 'success' : 'error');
     if (res.ok) {
       await this.refreshEvents();
       this.startNewEvent();
@@ -328,7 +320,7 @@ export class AdminComponent implements OnInit {
   removeEvent(e: EventRecord): void {
     this.askDelete('Delete event?', `"${e.name}" will be permanently deleted.`, async () => {
       const res = await this.supabase.deleteEvent(e.id);
-      this.eventMessage = res.message;
+      this.toast.show(res.message, res.ok ? 'success' : 'error');
       if (res.ok) {
         if (this.editingEventId === e.id) await this.startNewEvent();
         await this.refreshEvents();
@@ -358,7 +350,6 @@ export class AdminComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
-    this.sponsorMessage = '';
     this.sponsorUploading = true;
     try {
       await this.discardSponsorUpload();
@@ -366,7 +357,7 @@ export class AdminComponent implements OnInit {
       this.sponsorForm.flyer_url = result.url;
       this.sponsorDeleteToken = result.deleteToken ?? null;
     } catch (err: any) {
-      this.sponsorMessage = err?.message ?? 'Upload failed.';
+      this.toast.error(err?.message ?? 'Upload failed.');
     } finally {
       this.sponsorUploading = false;
       input.value = '';
@@ -382,13 +373,11 @@ export class AdminComponent implements OnInit {
     await this.discardSponsorUpload();
     this.editingSponsorId = null;
     this.sponsorForm = this.blankSponsorForm();
-    this.sponsorMessage = '';
   }
 
   async editSponsor(s: SponsorRecord): Promise<void> {
     await this.discardSponsorUpload();
     this.editingSponsorId = s.id;
-    this.sponsorMessage = '';
     this.sponsorForm = {
       business_name: s.business_name,
       flyer_url: s.flyer_url,
@@ -399,9 +388,8 @@ export class AdminComponent implements OnInit {
   }
 
   async saveSponsor(): Promise<void> {
-    this.sponsorMessage = '';
     if (!this.sponsorForm.business_name.trim() || !this.sponsorForm.flyer_url) {
-      this.sponsorMessage = 'Business name and a flyer image are required.';
+      this.toast.error('Business name and a flyer image are required.');
       return;
     }
 
@@ -419,7 +407,7 @@ export class AdminComponent implements OnInit {
       : await this.supabase.createSponsor(payload);
     this.savingSponsor = false;
 
-    this.sponsorMessage = res.message;
+    this.toast.show(res.message, res.ok ? 'success' : 'error');
     if (res.ok) {
       this.sponsorDeleteToken = null; // committed — keep the image
       await this.refreshSponsors();
@@ -430,7 +418,7 @@ export class AdminComponent implements OnInit {
   removeSponsor(s: SponsorRecord): void {
     this.askDelete('Delete sponsor?', `"${s.business_name}" will be permanently removed.`, async () => {
       const res = await this.supabase.deleteSponsor(s.id);
-      this.sponsorMessage = res.message;
+      this.toast.show(res.message, res.ok ? 'success' : 'error');
       if (res.ok) {
         if (this.editingSponsorId === s.id) await this.startNewSponsor();
         await this.refreshSponsors();

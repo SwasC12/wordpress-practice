@@ -151,7 +151,6 @@
       </div>
     </label>
 
-    <p class="message" *ngIf="message">{{ message }}</p>
 
     <div class="actions">
       <button class="btn btn-primary" (click)="save()" [disabled]="saving">
@@ -229,7 +228,6 @@
       <span>Published (visible on site)</span>
     </label>
 
-    <p class="message" *ngIf="eventMessage">{{ eventMessage }}</p>
 
     <div class="actions">
       <button class="btn btn-primary" (click)="saveEvent()" [disabled]="savingEvent">
@@ -306,7 +304,6 @@
       </label>
     </div>
 
-    <p class="message" *ngIf="sponsorMessage">{{ sponsorMessage }}</p>
 
     <div class="actions">
       <button class="btn btn-primary" (click)="saveSponsor()" [disabled]="savingSponsor">
