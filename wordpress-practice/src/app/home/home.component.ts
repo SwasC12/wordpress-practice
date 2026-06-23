@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SupabaseService, Post, CarEvent } from '../supabase.service';
+import { FlyersComponent } from '../flyers/flyers.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, FlyersComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })

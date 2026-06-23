@@ -2,8 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SupabaseService, PostRecord, EventRecord, NamedRow } from '../supabase.service';
+import { SupabaseService, PostRecord, EventRecord, SponsorRecord, NamedRow } from '../supabase.service';
 import { CloudinaryService } from '../cloudinary.service';
+
+type SponsorForm = {
+  business_name: string;
+  flyer_url: string;
+  link_url: string;
+  active: boolean;
+  sort_order: number;
+};
 
 type PostForm = {
   title: string;
@@ -50,7 +58,7 @@ export class AdminComponent implements OnInit {
   authors: NamedRow[] = [];
   gradients = GRADIENT_PRESETS;
 
-  activeTab: 'overview' | 'posts' | 'events' = 'overview';
+  activeTab: 'overview' | 'posts' | 'events' | 'sponsors' = 'overview';
 
   subscribers: { email: string; created_at: string }[] = [];
 
@@ -68,6 +76,15 @@ export class AdminComponent implements OnInit {
   editingEventId: string | null = null;
   savingEvent = false;
   eventMessage = '';
+
+  // Sponsors
+  sponsors: SponsorRecord[] = [];
+  sponsorForm: SponsorForm = this.blankSponsorForm();
+  editingSponsorId: string | null = null;
+  savingSponsor = false;
+  sponsorUploading = false;
+  sponsorMessage = '';
+  private sponsorDeleteToken: string | null = null;
 
   constructor(
     private supabase: SupabaseService,
@@ -119,7 +136,7 @@ export class AdminComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.userEmail = (await this.supabase.currentUserEmail()) ?? '';
-    await Promise.all([this.refresh(), this.refreshEvents()]);
+    await Promise.all([this.refresh(), this.refreshEvents(), this.refreshSponsors()]);
     [this.categories, this.authors, this.subscribers] = await Promise.all([
       this.supabase.getCategories(),
       this.supabase.getAuthors(),
@@ -306,6 +323,107 @@ export class AdminComponent implements OnInit {
     if (res.ok) {
       if (this.editingEventId === e.id) this.startNewEvent();
       await this.refreshEvents();
+    }
+  }
+
+  // ─────────────── Sponsors / flyers ───────────────
+
+  blankSponsorForm(): SponsorForm {
+    return { business_name: '', flyer_url: '', link_url: '', active: true, sort_order: 0 };
+  }
+
+  async refreshSponsors(): Promise<void> {
+    this.sponsors = await this.supabase.getAllSponsors();
+  }
+
+  private async discardSponsorUpload(): Promise<void> {
+    if (this.sponsorDeleteToken) {
+      await this.cloudinary.deleteByToken(this.sponsorDeleteToken);
+      this.sponsorDeleteToken = null;
+    }
+  }
+
+  async onSponsorFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.sponsorMessage = '';
+    this.sponsorUploading = true;
+    try {
+      await this.discardSponsorUpload();
+      const result = await this.cloudinary.upload(file);
+      this.sponsorForm.flyer_url = result.url;
+      this.sponsorDeleteToken = result.deleteToken ?? null;
+    } catch (err: any) {
+      this.sponsorMessage = err?.message ?? 'Upload failed.';
+    } finally {
+      this.sponsorUploading = false;
+      input.value = '';
+    }
+  }
+
+  async removeFlyer(): Promise<void> {
+    await this.discardSponsorUpload();
+    this.sponsorForm.flyer_url = '';
+  }
+
+  async startNewSponsor(): Promise<void> {
+    await this.discardSponsorUpload();
+    this.editingSponsorId = null;
+    this.sponsorForm = this.blankSponsorForm();
+    this.sponsorMessage = '';
+  }
+
+  async editSponsor(s: SponsorRecord): Promise<void> {
+    await this.discardSponsorUpload();
+    this.editingSponsorId = s.id;
+    this.sponsorMessage = '';
+    this.sponsorForm = {
+      business_name: s.business_name,
+      flyer_url: s.flyer_url,
+      link_url: s.link_url ?? '',
+      active: s.active,
+      sort_order: s.sort_order
+    };
+  }
+
+  async saveSponsor(): Promise<void> {
+    this.sponsorMessage = '';
+    if (!this.sponsorForm.business_name.trim() || !this.sponsorForm.flyer_url) {
+      this.sponsorMessage = 'Business name and a flyer image are required.';
+      return;
+    }
+
+    const payload: Partial<SponsorRecord> = {
+      business_name: this.sponsorForm.business_name.trim(),
+      flyer_url: this.sponsorForm.flyer_url,
+      link_url: this.sponsorForm.link_url.trim() || null,
+      active: this.sponsorForm.active,
+      sort_order: Number(this.sponsorForm.sort_order) || 0
+    };
+
+    this.savingSponsor = true;
+    const res = this.editingSponsorId
+      ? await this.supabase.updateSponsor(this.editingSponsorId, payload)
+      : await this.supabase.createSponsor(payload);
+    this.savingSponsor = false;
+
+    this.sponsorMessage = res.message;
+    if (res.ok) {
+      this.sponsorDeleteToken = null; // committed — keep the image
+      await this.refreshSponsors();
+      this.startNewSponsor();
+    }
+  }
+
+  async removeSponsor(s: SponsorRecord): Promise<void> {
+    if (!confirm(`Delete sponsor "${s.business_name}"?`)) return;
+    const res = await this.supabase.deleteSponsor(s.id);
+    this.sponsorMessage = res.message;
+    if (res.ok) {
+      if (this.editingSponsorId === s.id) this.startNewSponsor();
+      await this.refreshSponsors();
     }
   }
 

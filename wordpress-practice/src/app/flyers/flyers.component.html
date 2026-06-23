@@ -1,0 +1,34 @@
+<!-- Renders nothing if there are no active flyers -->
+<section class="flyers" *ngIf="flyers.length > 0" (mouseenter)="pause()" (mouseleave)="resume()">
+  <div class="container">
+    <div class="flyers-head">
+      <h2>From our partners</h2>
+      <span class="flyers-sub">Local car businesses worth a look</span>
+    </div>
+
+    <div class="stage">
+      <button class="arrow left" *ngIf="flyers.length > 1" (click)="go(-1)" aria-label="Previous">‹</button>
+
+      <div class="slides">
+        <ng-container *ngFor="let f of flyers; let i = index">
+          <a class="slide" *ngIf="i === current"
+             [href]="f.linkUrl || null"
+             [attr.target]="f.linkUrl ? '_blank' : null"
+             [attr.rel]="f.linkUrl ? 'noopener sponsored' : null">
+            <img [src]="f.flyerUrl" [alt]="f.businessName" />
+            <span class="slide-name">{{ f.businessName }}</span>
+          </a>
+        </ng-container>
+      </div>
+
+      <button class="arrow right" *ngIf="flyers.length > 1" (click)="go(1)" aria-label="Next">›</button>
+    </div>
+
+    <div class="dots" *ngIf="flyers.length > 1">
+      <button class="dot" *ngFor="let f of flyers; let i = index"
+              [class.active]="i === current"
+              (click)="goTo(i)"
+              [attr.aria-label]="'Go to flyer ' + (i + 1)"></button>
+    </div>
+  </div>
+</section>

@@ -47,6 +47,23 @@ export interface PostRecord {
 
 export interface NamedRow { id: string; name: string; }
 
+// Sponsor flyer shown on the public homepage
+export interface Sponsor {
+  businessName: string;
+  flyerUrl: string;
+  linkUrl: string | null;
+}
+
+export interface SponsorRecord {
+  id: string;
+  business_name: string;
+  flyer_url: string;
+  link_url: string | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface EventRecord {
   id: string;
   name: string;
@@ -145,6 +162,25 @@ export class SupabaseService {
     return { ok: true, message: 'Thanks for subscribing!' };
   }
 
+  /** Active sponsor flyers for the public carousel, in display order. */
+  async getSponsors(): Promise<Sponsor[]> {
+    const { data, error } = await this.client
+      .from('sponsors')
+      .select('business_name, flyer_url, link_url')
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('getSponsors failed:', error.message);
+      return [];
+    }
+    return (data ?? []).map((r: any) => ({
+      businessName: r.business_name,
+      flyerUrl: r.flyer_url,
+      linkUrl: r.link_url ?? null
+    }));
+  }
+
   // ─────────────── Auth ───────────────
 
   async signIn(email: string, password: string): Promise<{ ok: boolean; message: string }> {
@@ -240,6 +276,39 @@ export class SupabaseService {
       return [];
     }
     return (data ?? []) as { email: string; created_at: string }[];
+  }
+
+  // ─────────────── Admin: sponsors CRUD ───────────────
+
+  async getAllSponsors(): Promise<SponsorRecord[]> {
+    const { data, error } = await this.client
+      .from('sponsors')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('getAllSponsors failed:', error.message);
+      return [];
+    }
+    return (data ?? []) as SponsorRecord[];
+  }
+
+  async createSponsor(s: Partial<SponsorRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('sponsors').insert(s);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Sponsor created' };
+  }
+
+  async updateSponsor(id: string, s: Partial<SponsorRecord>): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('sponsors').update(s).eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Sponsor updated' };
+  }
+
+  async deleteSponsor(id: string): Promise<{ ok: boolean; message: string }> {
+    const { error } = await this.client.from('sponsors').delete().eq('id', id);
+    if (error) return { ok: false, message: error.message };
+    return { ok: true, message: 'Sponsor deleted' };
   }
 
   async getCategories(): Promise<NamedRow[]> {

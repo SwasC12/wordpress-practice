@@ -14,6 +14,7 @@
     <button class="tab" [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">Overview</button>
     <button class="tab" [class.active]="activeTab === 'posts'" (click)="activeTab = 'posts'">Posts</button>
     <button class="tab" [class.active]="activeTab === 'events'" (click)="activeTab = 'events'">Events</button>
+    <button class="tab" [class.active]="activeTab === 'sponsors'" (click)="activeTab = 'sponsors'">Sponsors</button>
   </div>
 </div>
 
@@ -261,6 +262,83 @@
         <div class="row-actions">
           <button class="ghost" (click)="editEvent(e)">Edit</button>
           <button class="ghost danger" (click)="removeEvent(e)">Delete</button>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<!-- ===== Sponsors tab ===== -->
+<main class="admin-main" *ngIf="activeTab === 'sponsors'">
+  <!-- Editor -->
+  <section class="panel editor">
+    <h2>{{ editingSponsorId ? 'Edit sponsor' : 'New sponsor' }}</h2>
+
+    <label>
+      <span>Business name</span>
+      <input [(ngModel)]="sponsorForm.business_name" placeholder="Joe's Auto Spares" />
+    </label>
+
+    <label>
+      <span>Link URL (optional)</span>
+      <input [(ngModel)]="sponsorForm.link_url" placeholder="https://example.com" />
+    </label>
+
+    <label>
+      <span>Flyer image</span>
+      <input type="file" accept="image/*" (change)="onSponsorFile($event)" [disabled]="sponsorUploading" />
+    </label>
+    <p class="muted" *ngIf="sponsorUploading">Uploading to Cloudinary…</p>
+
+    <div class="cover-preview" *ngIf="sponsorForm.flyer_url">
+      <img [src]="sponsorForm.flyer_url" alt="flyer preview" />
+      <button type="button" class="ghost danger" (click)="removeFlyer()">Remove flyer</button>
+    </div>
+
+    <div class="row">
+      <label>
+        <span>Sort order</span>
+        <input type="number" [(ngModel)]="sponsorForm.sort_order" />
+      </label>
+      <label class="check">
+        <input type="checkbox" [(ngModel)]="sponsorForm.active" />
+        <span>Active (visible on site)</span>
+      </label>
+    </div>
+
+    <p class="message" *ngIf="sponsorMessage">{{ sponsorMessage }}</p>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="saveSponsor()" [disabled]="savingSponsor">
+        {{ savingSponsor ? 'Saving…' : (editingSponsorId ? 'Update sponsor' : 'Create sponsor') }}
+      </button>
+      <button class="btn btn-outline" *ngIf="editingSponsorId" (click)="startNewSponsor()">Cancel</button>
+    </div>
+  </section>
+
+  <!-- List -->
+  <section class="panel list">
+    <div class="list-head">
+      <h2>Sponsors</h2>
+      <button class="btn btn-outline" (click)="startNewSponsor()">+ New</button>
+    </div>
+
+    <p class="muted" *ngIf="loading">Loading…</p>
+    <p class="muted" *ngIf="!loading && sponsors.length === 0">No sponsors yet. Add your first flyer.</p>
+
+    <ul class="post-rows">
+      <li class="post-row" *ngFor="let s of sponsors" [class.editing]="editingSponsorId === s.id">
+        <span class="swatch sm"><img [src]="s.flyer_url" alt="" /></span>
+        <div class="post-meta">
+          <span class="post-title">{{ s.business_name }}</span>
+          <span class="post-slug">order {{ s.sort_order }}</span>
+        </div>
+        <span class="badge" [class.draft]="!s.active">
+          {{ s.active ? 'Active' : 'Hidden' }}
+        </span>
+        <div class="row-actions">
+          <button class="ghost" (click)="editSponsor(s)">Edit</button>
+          <button class="ghost danger" (click)="removeSponsor(s)">Delete</button>
         </div>
       </li>
     </ul>
