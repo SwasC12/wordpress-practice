@@ -9,6 +9,7 @@
   --accent-2: #ffa726;
   display: block;
   min-height: 100vh;
+  overflow-x: hidden;             /* never let the admin scroll sideways */
   background: var(--bg);
   color: var(--text);
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -22,13 +23,16 @@
   position: sticky; top: 0; z-index: 10;
 }
 .bar {
-  max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 62px;
-  display: flex; align-items: center; justify-content: space-between;
+  max-width: 1100px; margin: 0 auto; padding: 0 24px; min-height: 62px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
-.logo { font-weight: 800; font-size: 1.2rem; color: var(--text); text-decoration: none; }
+.logo {
+  font-weight: 800; font-size: 1.2rem; color: var(--text); text-decoration: none;
+  flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .logo span { color: var(--accent); font-weight: 600; }
-.bar-right { display: flex; align-items: center; gap: 16px; }
-.user { color: var(--muted); font-size: .9rem; }
+.bar-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+.user { color: var(--muted); font-size: .9rem; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .ghost {
   background: none; border: none; color: var(--muted);
@@ -65,10 +69,10 @@
 
 /* Tabs */
 .tabs { border-bottom: 1px solid var(--border); background: var(--surface); }
-.tabs .bar { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; gap: 6px; }
+.tabs .bar { max-width: 1100px; margin: 0 auto; padding: 0 16px; display: flex; gap: 6px; overflow-x: auto; flex-wrap: nowrap; }
 .tab {
   background: none; border: none; color: var(--muted);
-  font: inherit; font-weight: 600; cursor: pointer;
+  font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap; flex: 0 0 auto;
   padding: 14px 18px; border-bottom: 2px solid transparent; margin-bottom: -1px;
 }
 .tab:hover { color: var(--text); }
@@ -193,16 +197,15 @@ label.check input { width: auto; }
 
 @media (max-width: 860px) {
   .admin-main { grid-template-columns: 1fr; }
+  .user { display: none; }                 /* email too wide for a small bar */
 }
 @media (max-width: 560px) {
   .editor .row { flex-direction: column; gap: 0; }
-  .bar { padding: 0 14px; }
+  .bar { padding: 0 14px; gap: 8px; }
   .bar-right { gap: 8px; }
-  .user { display: none; }                 /* email too long for a phone bar */
   .admin-main { padding: 18px 14px 50px; }
   .panel { padding: 16px; }
-  .tabs .bar { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
-  .tab { padding: 13px 14px; white-space: nowrap; }
+  .tab { padding: 13px 14px; }
   .bell-panel { width: calc(100vw - 32px); max-width: 320px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
 }
